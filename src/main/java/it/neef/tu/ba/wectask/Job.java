@@ -1,71 +1,86 @@
 package it.neef.tu.ba.wectask;
 
-/**
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
+import org.apache.flink.api.common.functions.FilterFunction;
+import org.apache.flink.api.common.functions.FlatMapFunction;
+import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
+import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.util.Collector;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
+import org.xml.sax.helpers.XMLReaderFactory;
+
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 
 /**
- * Skeleton for a Flink Job.
- *
- * For a full example of a Flink Job, see the WordCountJob.java file in the
- * same package/directory or have a look at the website.
- *
- * You can also generate a .jar file that you can submit on your Flink
- * cluster.
- * Just type
- * 		mvn clean package
- * in the projects root directory.
- * You will find the jar in
- * 		target/flink-quickstart-0.1-SNAPSHOT-Sample.jar
- *
+ * Count user edits from wikipedia metadata dumps.
  */
 public class Job {
 
+    //Filter for specific namespace.
+    private static int NS_FILTER = 0;
+
 	public static void main(String[] args) throws Exception {
-		// set up the execution environment
-		final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
 
+        if(args.length != 2) {
+            System.err.println("USAGE: Job <wikipediadump.xml> <output>");
+            return;
+        }
 
-		/**
-		 * Here, you can start creating your execution plan for Flink.
-		 *
-		 * Start with getting some data from the environment, like
-		 * 	env.readTextFile(textPath);
-		 *
-		 * then, transform the resulting DataSet<String> using operations
-		 * like
-		 * 	.filter()
-		 * 	.flatMap()
-		 * 	.join()
-		 * 	.coGroup()
-		 * and many more.
-		 * Have a look at the programming guide for the Java API:
-		 *
-		 * http://flink.apache.org/docs/latest/programming_guide.html
-		 *
-		 * and the examples
-		 *
-		 * http://flink.apache.org/docs/latest/examples.html
-		 *
-		 */
+        // set up the execution environment
+        final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
 
-		// execute program
-		env.execute("Flink Java API Skeleton");
-	}
+        //Parse XML Dump from wikipedia.
+        //We're only interested in <page>...<revision>...<contributor></contributor></revision></page>
+
+        XMLContentHandler xmlCH = null;
+		try {
+			XMLReader xmlReader = XMLReaderFactory.createXMLReader();
+            FileReader reader = new FileReader(args[0]);
+			InputSource inputSource = new InputSource(reader);
+            xmlCH = new XMLContentHandler();
+
+			xmlReader.setContentHandler(xmlCH);
+            xmlReader.parse(inputSource);
+        } catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (SAXException e) {
+			e.printStackTrace();
+		}
+
+        if(xmlCH==null) {
+            System.err.println("Error parsing XML!");
+            return ;
+        }
+
+        //Filter for specific namespace!
+        DataSet<Page> pageSet = env.fromCollection(xmlCH.allPages).filter(new FilterFunction<Page>() {
+            @Override
+            public boolean filter(Page page) throws Exception {
+                return  page.ns == NS_FILTER;
+            }
+        });
+
+        //Put all <Username,Edits> (Edits = 1 per revision) into a dataset.
+        DataSet<Tuple2<String, Integer>> userEditSet = pageSet.flatMap(new FlatMapFunction<Page, Tuple2<String, Integer>>() {
+            @Override
+            public void flatMap(Page page, Collector<Tuple2<String, Integer>> collector) throws Exception {
+                for(Revision r : page.revisions) {
+                    collector.collect(new Tuple2<String, Integer>(r.getUsername(), 1));
+                }
+            }
+        });
+
+        //Group by Username and sum by Edits
+        userEditSet
+            .groupBy(0)
+            .sum(1)
+            .print();
+        //    .writeAsCsv(args[1],"\n", "|");
+    }
 }
