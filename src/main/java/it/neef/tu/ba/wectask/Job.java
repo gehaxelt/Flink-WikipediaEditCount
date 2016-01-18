@@ -4,6 +4,7 @@ import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
+import org.apache.flink.api.java.io.TextOutputFormat;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.util.Collector;
 import org.xml.sax.InputSource;
@@ -80,7 +81,12 @@ public class Job {
         userEditSet
             .groupBy(0)
             .sum(1)
-            .print();
-        //    .writeAsCsv(args[1],"\n", "|");
+            //.print();
+            .writeAsFormattedText(args[1], new TextOutputFormat.TextFormatter<Tuple2<String, Integer>>() {
+                @Override
+                public String format(Tuple2<String, Integer> stringIntegerTuple2) {
+                    return stringIntegerTuple2.f0 + "," + String.valueOf(stringIntegerTuple2.f1);
+                }
+            });
     }
 }
