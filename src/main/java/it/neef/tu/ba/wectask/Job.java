@@ -81,13 +81,15 @@ public class Job {
         userEditSet
             .groupBy(0)
             .sum(1)
-            .print();
-            /*.writeAsFormattedText(args[1], new TextOutputFormat.TextFormatter<Tuple2<String, Integer>>() {
+            //.print();
+            .writeAsFormattedText(args[1], new TextOutputFormat.TextFormatter<Tuple2<String, Integer>>() {
                 @Override
                 public String format(Tuple2<String, Integer> stringIntegerTuple2) {
                     return stringIntegerTuple2.f0 + "," + String.valueOf(stringIntegerTuple2.f1);
                 }
             });
-            */
+
+        env.execute("Wikipedia user edit count");
+
     }
 }
