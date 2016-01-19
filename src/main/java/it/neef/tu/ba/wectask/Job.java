@@ -60,10 +60,10 @@ public class Job {
         }
 
         //Filter for specific namespace!
-        DataSet<Page> pageSet = env.fromCollection(xmlCH.allPages).filter(new FilterFunction<Page>() {
+        DataSet<Page> pageSet = env.fromCollection(xmlCH.getAllPages()).filter(new FilterFunction<Page>() {
             @Override
             public boolean filter(Page page) throws Exception {
-                return  page.ns == NS_FILTER;
+                return  page.getNs() == NS_FILTER;
             }
         });
 
@@ -71,7 +71,7 @@ public class Job {
         DataSet<Tuple2<String, Integer>> userEditSet = pageSet.flatMap(new FlatMapFunction<Page, Tuple2<String, Integer>>() {
             @Override
             public void flatMap(Page page, Collector<Tuple2<String, Integer>> collector) throws Exception {
-                for(Revision r : page.revisions) {
+                for(Revision r : page.getRevisions()) {
                     collector.collect(new Tuple2<String, Integer>(r.getUsername(), 1));
                 }
             }
@@ -81,12 +81,13 @@ public class Job {
         userEditSet
             .groupBy(0)
             .sum(1)
-            //.print();
-            .writeAsFormattedText(args[1], new TextOutputFormat.TextFormatter<Tuple2<String, Integer>>() {
+            .print();
+            /*.writeAsFormattedText(args[1], new TextOutputFormat.TextFormatter<Tuple2<String, Integer>>() {
                 @Override
                 public String format(Tuple2<String, Integer> stringIntegerTuple2) {
                     return stringIntegerTuple2.f0 + "," + String.valueOf(stringIntegerTuple2.f1);
                 }
             });
+            */
     }
 }

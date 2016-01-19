@@ -12,12 +12,36 @@ import java.util.ArrayList;
  */
 public class XMLContentHandler implements ContentHandler {
 
-    ArrayList<Page> allPages = new ArrayList<Page>();
-    String cValue;
-    Page cPage;
-    Revision cRevision;
-    enum MODES { NONE, PAGE, REVISION, CONTRIBUTOR };
-    MODES cMode;
+    /**
+     * List of all parsed pages.
+     */
+    private ArrayList<Page> allPages = new ArrayList<Page>();
+    /**
+     * Value between the current tag.
+     */
+    private String cValue;
+    /**
+     * Current <page>-tag we are working on.
+     */
+    private Page cPage;
+    /**
+     * Current <revision>-tag we are working on.
+     */
+    private Revision cRevision;
+
+    /**
+     * Switching modes for inner tag parsing.
+     * NONE: We're not parsing a specific tag.
+     * PAGE: We're insinde a <page>-tag
+     * REVISION: We're inside a <revision>-tag
+     * CONTRIBUTOR: We're inside a <contributor>-tag.
+     */
+    private enum MODES { NONE, PAGE, REVISION, CONTRIBUTOR };
+
+    /**
+     * Current parsing mode.
+     */
+    private MODES cMode;
 
     @Override
     public void setDocumentLocator(Locator locator) {
@@ -26,6 +50,7 @@ public class XMLContentHandler implements ContentHandler {
 
     @Override
     public void startDocument() throws SAXException {
+        //Start without a specific mode.
         this.cMode = MODES.NONE;
     }
 
@@ -88,8 +113,9 @@ public class XMLContentHandler implements ContentHandler {
                         this.cRevision.setId(Integer.valueOf(this.cValue));
                         break;
                     case "revision":
-                        if(this.cRevision.username != null) {
-                            this.cPage.revisions.add(this.cRevision);
+                        //Skip revisions without an username.
+                        if(this.cRevision.getUsername() != null) {
+                            this.cPage.getRevisions().add(this.cRevision);
                         }
                         this.cMode = MODES.PAGE;
                         break;
@@ -125,5 +151,13 @@ public class XMLContentHandler implements ContentHandler {
     @Override
     public void skippedEntity(String s) throws SAXException {
 
+    }
+
+    public ArrayList<Page> getAllPages() {
+        return allPages;
+    }
+
+    public void setAllPages(ArrayList<Page> allPages) {
+        this.allPages = allPages;
     }
 }

@@ -6,10 +6,22 @@ import java.util.ArrayList;
  * Created by gehaxelt on 17.01.16.
  */
 public class Page {
-    String title;
-    int id;
-    int ns;
-    ArrayList<Revision> revisions = new ArrayList<Revision>();
+    /**
+     * Page title
+     */
+    private String title;
+    /**
+     * Page ID
+     */
+    private int id;
+    /**
+     * Page namespace
+     */
+    private int ns;
+    /**
+     * Page's revisions
+     */
+    private ArrayList<Revision> revisions = new ArrayList<Revision>();
 
     public String getTitle() {
         return title;

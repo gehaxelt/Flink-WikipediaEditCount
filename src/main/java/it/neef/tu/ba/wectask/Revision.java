@@ -4,8 +4,14 @@ package it.neef.tu.ba.wectask;
  * Created by gehaxelt on 17.01.16.
  */
 public class Revision {
-    int id;
-    String username;
+    /**
+     * Revision-ID
+     */
+    private int id;
+    /**
+     * Username of contributor.
+     */
+    private String username;
 
     public int getId() {
         return id;
