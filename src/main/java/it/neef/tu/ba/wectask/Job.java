@@ -22,7 +22,8 @@ import java.io.IOException;
 public class Job {
 
     //Filter for specific namespace.
-    private static int NS_FILTER = 0;
+    public static final int NS_FILTER = 0;
+
 
 	public static void main(String[] args) throws Exception {
 
@@ -31,28 +32,9 @@ public class Job {
             return;
         }
 
-        // set up the execution environment
         final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
 
-        //Parse XML Dump from wikipedia.
-        //We're only interested in <page>...<revision>...<contributor></contributor></revision></page>
-
-        XMLContentHandler xmlCH = null;
-		try {
-			XMLReader xmlReader = XMLReaderFactory.createXMLReader();
-            FileReader reader = new FileReader(args[0]);
-			InputSource inputSource = new InputSource(reader);
-            xmlCH = new XMLContentHandler();
-
-			xmlReader.setContentHandler(xmlCH);
-            xmlReader.parse(inputSource);
-        } catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (SAXException e) {
-			e.printStackTrace();
-		}
+        XMLContentHandler xmlCH = XMLContentHandler.parseXML(args[0]);
 
         if(xmlCH==null) {
             System.err.println("Error parsing XML!");
@@ -85,7 +67,7 @@ public class Job {
             .writeAsFormattedText(args[1], new TextOutputFormat.TextFormatter<Tuple2<String, Integer>>() {
                 @Override
                 public String format(Tuple2<String, Integer> stringIntegerTuple2) {
-                    return stringIntegerTuple2.f0 + "," + String.valueOf(stringIntegerTuple2.f1);
+                    return stringIntegerTuple2.f0 + ", " + String.valueOf(stringIntegerTuple2.f1);
                 }
             });
 

@@ -1,10 +1,11 @@
 package it.neef.tu.ba.wectask;
 
-import org.xml.sax.Attributes;
-import org.xml.sax.ContentHandler;
-import org.xml.sax.Locator;
-import org.xml.sax.SAXException;
+import org.xml.sax.*;
+import org.xml.sax.helpers.XMLReaderFactory;
 
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 
 /**
@@ -159,5 +160,32 @@ public class XMLContentHandler implements ContentHandler {
 
     public void setAllPages(ArrayList<Page> allPages) {
         this.allPages = allPages;
+    }
+
+    /**
+     * Parses XML Dump from wikipedia. We're only interested in <page>...<revision>...<contributor></contributor></revision></page>
+     * @param filePath - Path to file to read XML data from.
+     * @return XMLContentHandler with parsed data.
+     */
+    public static XMLContentHandler parseXML(String filePath) {
+        XMLContentHandler xmlHandler = new XMLContentHandler();
+        try {
+            XMLReader xmlReader = XMLReaderFactory.createXMLReader();
+            FileReader fReader = new FileReader(filePath);
+            InputSource iSource = new InputSource(fReader);
+
+            xmlReader.setContentHandler(xmlHandler);
+            xmlReader.parse(iSource);
+            fReader.close();
+
+        } catch (FileNotFoundException e) {
+            return null;
+        } catch (IOException e) {
+            return null;
+        } catch (SAXException e) {
+            return null;
+        }
+
+        return xmlHandler;
     }
 }
