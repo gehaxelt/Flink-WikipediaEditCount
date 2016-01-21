@@ -38,6 +38,14 @@ public class JobTest extends TestCase {
          * When project is packaged and ran with bin/flink project.jar input file:///output, all output is written to /output.
          * However, when Job.main() is called in this test, /output is a directory, with the small files containing parts of
          * the intended file. It seems like "bin/flink" concatenates those files, but directly calling Job.main() doesn't.
+         *
+         * REASON:
+         * fs.output.always-create-directory: File writers running with a parallelism larger than one create a directory
+         * for the output file path and put the different result files (one per parallel writer task) into that directory.
+         * If this option is set to true, writers with a parallelism of 1 will also create a directory and place a single
+         * result file into it. If the option is set to false, the writer will directly create the file directly at the
+         * output path, without creating a containing directory. (DEFAULT: false)
+         * SRC: https://ci.apache.org/projects/flink/flink-docs-master/setup/config.html#other
          */
         Collection<File> files = FileUtils.listFiles(this.outputFile, null, false);
         for(File file: files) {
