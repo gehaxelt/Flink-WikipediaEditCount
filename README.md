@@ -35,7 +35,7 @@ This should produce a file called ```WikipediaEditCountTask-1.0-SNAPSHOT.jar``` 
 Download a Wikipedia XML Dump from <https://dumps.wikimedia.org/backup-index.html> with edit history content (```*-pages-meta-history.xml```).
 For example <https://dumps.wikimedia.org/aawiki/20160111/aawiki-20160111-pages-meta-history.xml.7z> and decompress it.
 
-To start the compution, change into your apache-flink installation directory again:
+To start the computation, change into your apache-flink installation directory again:
 
 ```
 bin/flink run <path-to-target-wikipediaeditcountask-snapshot.jar> <path-to-pages-meta-history.xml> <output-file>
