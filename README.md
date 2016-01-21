@@ -40,4 +40,8 @@ To start the compution, change into your apache-flink installation directory aga
 ```
 bin/flink run <path-to-target-wikipediaeditcountask-snapshot.jar> <path-to-pages-meta-history.xml> <output-file>
 ```
-where ```<output-file>``` should have the prefix (e.g. ```file://```, ```file:///tmp/output```).  
+where ```<output-file>``` should have a prefix (e.g. ```file://```, ```file:///tmp/output```).  
+
+License
+=====================
+See ```LICENSE.md```
