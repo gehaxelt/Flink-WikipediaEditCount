@@ -6,6 +6,7 @@ import org.xml.sax.helpers.XMLReaderFactory;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.ArrayList;
 
 /**
@@ -187,5 +188,28 @@ public class XMLContentHandler implements ContentHandler {
         }
 
         return xmlHandler;
+    }
+
+    public static Page parseXMLString(String pageXML) {
+        XMLContentHandler xmlHandler = new XMLContentHandler();
+        try {
+            XMLReader xmlReader = XMLReaderFactory.createXMLReader();
+            InputSource iSource = new InputSource(new StringReader(pageXML));
+
+            xmlReader.setContentHandler(xmlHandler);
+            xmlReader.parse(iSource);
+
+        } catch (FileNotFoundException e) {
+            return null;
+        } catch (IOException e) {
+            return null;
+        } catch (SAXException e) {
+            return null;
+        }
+        if(xmlHandler.getAllPages().size() != 1) {
+            return null;
+        }
+
+        return xmlHandler.getAllPages().get(0);
     }
 }

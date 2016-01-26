@@ -2,19 +2,16 @@ package it.neef.tu.ba.wectask;
 
 import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.api.common.functions.FlatMapFunction;
+import org.apache.flink.api.common.functions.MapFunction;
+import org.apache.flink.api.common.functions.ReduceFunction;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
+import org.apache.flink.api.java.aggregation.Aggregations;
 import org.apache.flink.api.java.io.TextOutputFormat;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.util.Collector;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.XMLReader;
-import org.xml.sax.helpers.XMLReaderFactory;
-
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
 
 /**
  * Count user edits from wikipedia metadata dumps.
@@ -34,44 +31,53 @@ public class Job {
 
         final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
 
-        XMLContentHandler xmlCH = XMLContentHandler.parseXML(args[0]);
+        DataSet<Tuple2<LongWritable, Text>> input =
+                env.readHadoopFile(new PageXMLInputFormat(), LongWritable.class, Text.class, args[0]);
 
-        if(xmlCH==null) {
-            System.err.println("Error parsing XML!");
-            return ;
-        }
+        DataSet<Page> pages = input.map(new MapFunction<Tuple2<LongWritable, Text>, Page>() {
+            @Override
+            public Page map(Tuple2<LongWritable, Text> longWritableTextTuple2) throws Exception {
+                Page p = XMLContentHandler.parseXMLString(longWritableTextTuple2.f1.toString());
+                if(p == null) {
+                    return null;
+                }
+                return p;
+            }
+        });
 
-        //Filter for specific namespace!
-        DataSet<Page> pageSet = env.fromCollection(xmlCH.getAllPages()).filter(new FilterFunction<Page>() {
+
+
+        pages = pages.filter(new FilterFunction<Page>() {
             @Override
             public boolean filter(Page page) throws Exception {
                 return  page.getNs() == NS_FILTER;
             }
         });
 
-        //Put all <Username,Edits> (Edits = 1 per revision) into a dataset.
-        DataSet<Tuple2<String, Integer>> userEditSet = pageSet.flatMap(new FlatMapFunction<Page, Tuple2<String, Integer>>() {
+        DataSet<User> users = pages.flatMap(new FlatMapFunction<Page, User>() {
             @Override
-            public void flatMap(Page page, Collector<Tuple2<String, Integer>> collector) throws Exception {
+            public void flatMap(Page page, Collector<User> collector) throws Exception {
                 for(Revision r : page.getRevisions()) {
-                    collector.collect(new Tuple2<String, Integer>(r.getUsername(), 1));
+                    collector.collect(new User(r.getUsername(), 1));
                 }
             }
         });
 
-        //Group by Username and sum by Edits
-        userEditSet
-            .groupBy(0)
-            .sum(1)
-            //.print();
-            .writeAsFormattedText(args[1], new TextOutputFormat.TextFormatter<Tuple2<String, Integer>>() {
+        users
+            .groupBy("username")
+            .reduce(new ReduceFunction<User>() {
                 @Override
-                public String format(Tuple2<String, Integer> stringIntegerTuple2) {
-                    return stringIntegerTuple2.f0 + ", " + String.valueOf(stringIntegerTuple2.f1);
+                public User reduce(User user, User t1) throws Exception {
+                    return new User(user.getUsername(), user.getEditCount() + t1.getEditCount());
+                }
+            })
+            .writeAsFormattedText(args[1], new TextOutputFormat.TextFormatter<User>() {
+                @Override
+                public String format(User user) {
+                    return user.getUsername() + ", " + String.valueOf(user.getEditCount());
                 }
             });
 
         env.execute("Wikipedia user edit count");
-
     }
 }
