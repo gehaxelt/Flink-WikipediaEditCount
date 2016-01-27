@@ -6,12 +6,13 @@ import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.functions.ReduceFunction;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
-import org.apache.flink.api.java.aggregation.Aggregations;
 import org.apache.flink.api.java.io.TextOutputFormat;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.util.Collector;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
+
+import java.util.ArrayList;
 
 /**
  * Count user edits from wikipedia metadata dumps.
@@ -37,11 +38,11 @@ public class Job {
         DataSet<Page> pages = input.map(new MapFunction<Tuple2<LongWritable, Text>, Page>() {
             @Override
             public Page map(Tuple2<LongWritable, Text> longWritableTextTuple2) throws Exception {
-                Page p = XMLContentHandler.parseXMLString(longWritableTextTuple2.f1.toString());
-                if(p == null) {
+                ArrayList<Page> pages = XMLContentHandler.parseXMLString(longWritableTextTuple2.f1.toString());
+                if(pages == null || pages.size() != 1 || pages.get(0) == null) {
                     return null;
                 }
-                return p;
+                return pages.get(0);
             }
         });
 

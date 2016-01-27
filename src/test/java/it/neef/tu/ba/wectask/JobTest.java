@@ -26,7 +26,7 @@ public class JobTest extends TestCase {
     public void testJob() {
 
         try {
-            Job.main(new String[] {this.XMLDataFile.getAbsolutePath(), "file://" + this.outputFile.getAbsolutePath()});
+            Job.main(new String[] {this.XMLDataFile.toURI().toURL().toString(), this.outputFile.toURI().toURL().toString()});
         } catch (Exception e) {
             fail("Exception occurred " + e);
         }
