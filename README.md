@@ -3,6 +3,8 @@ WikipediaEditCount
 This is an exercise for writing an apache flink java program. The task is to read a Wikipedia XML Dump (```**-pages-meta-history.xml```) and output author name and edit counts tuples for all pages in namespace 0. 
 The full task can be found in ```src/doc/Wikipedia author count using Apache Flink.pdf```. 
 
+[![Build Status](https://travis-ci.org/gehaxelt/Flink-WikipediaEditCount.svg?branch=master)](https://travis-ci.org/gehaxelt/Flink-WikipediaEditCount)
+
 Requirements
 =====================
 - Java 1.8
