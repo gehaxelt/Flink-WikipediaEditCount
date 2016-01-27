@@ -57,6 +57,6 @@ public class Page {
 
     @Override
     public String toString() {
-        return "Page: " + String.valueOf(this.id) + " ("+String.valueOf(this.ns)+"), " + this.title;
+        return "Page: " + String.valueOf(this.id) + " ("+String.valueOf(this.ns)+"), " + this.title + ", revs: " + String.valueOf(revisions.size());
     }
 }
