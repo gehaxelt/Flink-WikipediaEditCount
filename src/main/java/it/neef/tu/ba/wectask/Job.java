@@ -9,8 +9,13 @@ import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.java.io.TextOutputFormat;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.util.Collector;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.compress.CompressionCodec;
+import org.apache.hadoop.io.compress.CompressionCodecFactory;
+import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 
 import java.util.ArrayList;
 
@@ -25,12 +30,14 @@ public class Job {
 
 	public static void main(String[] args) throws Exception {
 
+
         if(args.length != 2) {
             System.err.println("USAGE: Job <wikipediadump.xml> <output>");
             return;
         }
 
         final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
+
 
         DataSet<Tuple2<LongWritable, Text>> input =
                 env.readHadoopFile(new PageXMLInputFormat(), LongWritable.class, Text.class, args[0]);
